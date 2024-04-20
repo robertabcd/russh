@@ -5,7 +5,6 @@ use crate::{key, Error};
 
 /// Decode a secret key in the PKCS#5 format, possible deciphering it
 /// using the supplied password.
-#[cfg(feature = "openssl")]
 pub fn decode_pkcs5(
     secret: &[u8],
     password: Option<&str>,
@@ -25,7 +24,8 @@ pub fn decode_pkcs5(
                 #[allow(clippy::unwrap_used)] // AES parameters are static
                 let c = cbc::Decryptor::<Aes128>::new_from_slices(&md5.0, &iv[..]).unwrap();
                 let mut dec = secret.to_vec();
-                c.decrypt_padded_mut::<Pkcs7>(&mut dec)?;
+                let n = c.decrypt_padded_mut::<Pkcs7>(&mut dec)?.len();
+                dec.truncate(n);
                 dec
             }
             Encryption::Aes256Cbc(_) => unimplemented!(),

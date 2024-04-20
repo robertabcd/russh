@@ -30,12 +30,10 @@ impl PubKey for PublicKey {
                 buffer.extend_ssh_string(ED25519.0.as_bytes());
                 buffer.extend_ssh_string(public.as_bytes());
             }
-            #[cfg(feature = "openssl")]
             PublicKey::RSA { ref key, .. } => {
-                #[allow(clippy::unwrap_used)] // type known
-                let rsa = key.0.rsa().unwrap();
-                let e = rsa.e().to_vec();
-                let n = rsa.n().to_vec();
+                use rsa::traits::PublicKeyParts;
+                let e = key.e().to_bytes_be();
+                let n = key.n().to_bytes_be();
                 buffer.push_u32_be((4 + SSH_RSA.0.len() + mpint_len(&n) + mpint_len(&e)) as u32);
                 buffer.extend_ssh_string(SSH_RSA.0.as_bytes());
                 buffer.extend_ssh_mpint(&e);
@@ -57,10 +55,10 @@ impl PubKey for KeyPair {
                 buffer.extend_ssh_string(ED25519.0.as_bytes());
                 buffer.extend_ssh_string(public.as_slice());
             }
-            #[cfg(feature = "openssl")]
             KeyPair::RSA { ref key, .. } => {
-                let e = key.e().to_vec();
-                let n = key.n().to_vec();
+                use rsa::traits::PublicKeyParts;
+                let e = key.e().to_bytes_be();
+                let n = key.n().to_bytes_be();
                 buffer.push_u32_be((4 + SSH_RSA.0.len() + mpint_len(&n) + mpint_len(&e)) as u32);
                 buffer.extend_ssh_string(SSH_RSA.0.as_bytes());
                 buffer.extend_ssh_mpint(&e);
